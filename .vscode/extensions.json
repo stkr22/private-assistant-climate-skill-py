@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "samuelcolvin.jinjahtml",
+        "streetsidesoftware.code-spell-checker",
+        "tamasfe.even-better-toml",
+        "ms-python.mypy-type-checker",
+        "christian-kohler.path-intellisense",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "charliermarsh.ruff"
+    ]
+}

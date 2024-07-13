@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Main",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/private_assistant_climate_skill/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "LOG_LEVEL": "DEBUG"
+            }
+        }
+    ]
+}
