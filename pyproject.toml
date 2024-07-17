@@ -17,7 +17,7 @@ pyyaml = "^6.0.1"
 jinja2 = "^3.1.3"
 word2number = "^1.1"
 en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"}
-private-assistant-commons = "^0.1.0"
+private-assistant-commons = "^0.1.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.3.7"
@@ -34,7 +34,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 target-version = "py311"
-line-length = 88
+line-length = 120
 indent-width = 4
 
 [tool.ruff.lint]

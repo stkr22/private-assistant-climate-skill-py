@@ -1,6 +1,9 @@
 {
 	"name": "private-assistant-climate-skill-py-dev-environment",
 	"image": "mcr.microsoft.com/devcontainers/python:3.11",
+	"runArgs": [
+		"--userns=keep-id"
+	],
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -16,6 +19,7 @@
 		}
 	},
 	"containerEnv": {
+		"HOME": "/home/vscode",
 		"POETRY_VIRTUALENVS_IN_PROJECT": "true"
 	},
 	"postCreateCommand": "pip install --user poetry pre-commit && poetry install && pre-commit install"
