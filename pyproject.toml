@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "private-assistant-climate-skill"
-version = "0.1.3"
+version = "0.1.4"
 description = "Climate Control Skill for Private Assistant: Enables automated and voice-activated climate control within smart home environments."
 authors = ["stkr22 <stkr22@github.com>"]
 readme = "README.md"
