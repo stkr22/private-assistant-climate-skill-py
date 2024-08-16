@@ -1,7 +1,4 @@
-import logging
-import os
 import pathlib
-import sys
 from typing import Annotated
 
 import jinja2
@@ -11,13 +8,6 @@ from homeassistant_api import Client
 from private_assistant_commons import skill_config
 
 from private_assistant_climate_skill import climate_skill, config
-
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    level=log_level,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    stream=sys.stdout,
-)
 
 app = typer.Typer()
 

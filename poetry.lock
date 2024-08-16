@@ -791,13 +791,13 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "private-assistant-commons"
-version = "0.1.4"
+version = "0.1.5"
 description = "Common utilities and base functionalities for all skills in the Private Assistant ecosystem."
 optional = false
 python-versions = "<3.12,>=3.11"
 files = [
-    {file = "private_assistant_commons-0.1.4-py3-none-any.whl", hash = "sha256:da97f0dc37b8cc9865ef1228dbd642bededb4e67ff71e6a342f81936d9af39a4"},
-    {file = "private_assistant_commons-0.1.4.tar.gz", hash = "sha256:6ee025bc7f6eaf4304bfba7a47a9b38d6edd58011933aec3018bcbee667965e5"},
+    {file = "private_assistant_commons-0.1.5-py3-none-any.whl", hash = "sha256:73b91380f0dbba2262ca50619960c7b080535d9a41fee5304c89b065f1fd577d"},
+    {file = "private_assistant_commons-0.1.5.tar.gz", hash = "sha256:9138451090e25e6de10600f0c79b68b20228abdf94d47b8d8754b0a69ccf50d2"},
 ]
 
 [package.dependencies]
@@ -1421,4 +1421,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "1e44c47b2559d2c1c922846d10a0fe07b1e2a610890008e933c352e9b9c4a3e2"
+content-hash = "37de51faa5e008255afebfc0d701412a636a716c153c14f77dac4f26c39de7d9"
