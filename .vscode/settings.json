@@ -10,7 +10,6 @@
         },
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
-    "mypy-type-checker.cwd": "${workspaceFolder}/src",
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
     "python.testing.pytestArgs": [
         "tests"

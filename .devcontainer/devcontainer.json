@@ -1,5 +1,5 @@
 {
-	"name": "private-assistant-climate-skill-py-dev-environment",
+	"name": "private-assistant-climate-skill-dev-environment",
 	"image": "mcr.microsoft.com/devcontainers/python:3.11",
 	"runArgs": [
 		"--userns=keep-id"
@@ -14,7 +14,9 @@
 				"charliermarsh.ruff",
 				"ms-python.mypy-type-checker",
 				"tamasfe.even-better-toml",
-				"github.vscode-github-actions"
+				"github.vscode-github-actions",
+				"oderwat.indent-rainbow",
+				"mhutchie.git-graph"
 			]
 		}
 	},
