@@ -1,4 +1,3 @@
-import os
 from enum import Enum
 
 import homeassistant_api as ha_api
@@ -11,7 +10,6 @@ from pydantic import BaseModel
 
 from private_assistant_climate_skill import config
 
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logger = SkillLogger.get_logger(__name__)
 
 
