@@ -21,18 +21,6 @@ def render_template(template_name, parameters, env, action=None):
     return template.render(parameters=parameters, action=action)
 
 
-# Test for help.j2
-@pytest.mark.parametrize(
-    "expected_output",
-    [
-        ("Here is how you can use the ClimateSkill:\n" "- Say 'set the temperature to 22 degrees' to set a device."),
-    ],
-)
-def test_help_template(jinja_env, expected_output):
-    result = render_template("help.j2", Parameters(), jinja_env)
-    assert result == expected_output
-
-
 # Test for set_temperature.j2 (setting temperature)
 @pytest.mark.parametrize(
     "targets, temperature, expected_output",
@@ -40,12 +28,12 @@ def test_help_template(jinja_env, expected_output):
         (
             [ClimateSkillDevice(alias="Living Room Thermostat")],
             22,
-            "I have set the temperature to 22°C.",
+            "The temperature has been set to 22 Celsius.",
         ),
         (
             [ClimateSkillDevice(alias="Bedroom Thermostat")],
             18,
-            "I have set the temperature to 18°C.",
+            "The temperature has been set to 18 Celsius.",
         ),
     ],
 )

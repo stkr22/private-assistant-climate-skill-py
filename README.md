@@ -18,7 +18,7 @@ This Home Automation Skill is a specialized module designed to integrate with a 
 
 - A functioning MQTT broker setup.
 - The Modular Private Assistant's coordinator must be running and configured.
-- Python 3.11
+- Python 3.12
 
 ## Contributing
 
