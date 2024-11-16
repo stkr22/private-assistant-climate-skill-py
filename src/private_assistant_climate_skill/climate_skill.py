@@ -15,7 +15,8 @@ from private_assistant_climate_skill.models import ClimateSkillDevice
 
 class Parameters(BaseModel):
     temperature: int = 0
-    targets: list[ClimateSkillDevice] = []  # Targets are devices from the database
+    targets: list[ClimateSkillDevice] = []
+    rooms: list[str] = []
 
 
 class Action(Enum):
@@ -71,23 +72,29 @@ class ClimateSkill(commons.BaseSkill):
                     except ValidationError as e:
                         self.logger.error("Validation error loading device into cache: %s", e)
 
-    async def get_devices(self, room: str) -> list[ClimateSkillDevice]:
-        """Return devices for a specific room, using async cache loading."""
+    async def get_devices(self, rooms: list[str]) -> list[ClimateSkillDevice]:
+        """Return devices for a list of rooms, using async cache loading."""
         if not self._device_cache:
             await self.load_device_cache()
-        self.logger.info("Fetching devices for room: %s", room)
-        return self._device_cache.get(room, [])
+        self.logger.info("Fetching devices for rooms: %s", rooms)
+
+        # Gather devices from all specified rooms
+        devices = []
+        for room in rooms:
+            devices.extend(self._device_cache.get(room, []))
+        return devices
 
     async def calculate_certainty(self, intent_analysis_result: commons.IntentAnalysisResult) -> float:
         if "temperature" in intent_analysis_result.nouns:
-            self.logger.debug("Temperature noun detected, certainty set to 1.0.")
+            self.logger.info("Temperature noun detected, certainty set to 1.0.")
             return 1.0
         self.logger.debug("No temperature noun detected, certainty set to 0.")
         return 0
 
     async def find_parameters(self, action: Action, intent_analysis_result: commons.IntentAnalysisResult) -> Parameters:
         parameters = Parameters()
-        devices = await self.get_devices(intent_analysis_result.client_request.room)
+        parameters.rooms = intent_analysis_result.rooms or [intent_analysis_result.client_request.room]
+        devices = await self.get_devices(parameters.rooms)
         if action == Action.SET:
             parameters.targets = [device for device in devices]
             if intent_analysis_result.numbers:
