@@ -139,7 +139,7 @@ class ClimateSkill(commons.BaseSkill):
         parameters = await self.find_parameters(action, intent_analysis_result)
         if parameters.targets:
             answer = self.get_answer(action, parameters)
-            self.add_task(self.add_text_to_output_topic(answer, client_request=intent_analysis_result.client_request))
+            self.add_task(self.send_response(answer, client_request=intent_analysis_result.client_request))
             if action not in [Action.HELP]:
                 self.add_task(self.send_mqtt_command(action, parameters))
         else:
