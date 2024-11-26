@@ -209,7 +209,7 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
             patch.object(self.skill, "get_answer", return_value="Setting temperature to 22°C") as mock_get_answer,
             patch.object(self.skill, "send_mqtt_command") as mock_send_mqtt_command,
             patch.object(self.skill, "find_parameters", return_value=mock_parameters),
-            patch.object(self.skill, "add_text_to_output_topic") as mock_add_text_to_output_topic,
+            patch.object(self.skill, "send_response") as mock_send_response,
         ):
             # Execute the process_request method
             await self.skill.process_request(mock_intent_result)
@@ -217,6 +217,6 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
             # Assert that methods were called with expected arguments
             mock_get_answer.assert_called_once_with(Action.SET, mock_parameters)
             mock_send_mqtt_command.assert_called_once_with(Action.SET, mock_parameters)
-            mock_add_text_to_output_topic.assert_called_once_with(
+            mock_send_response.assert_called_once_with(
                 "Setting temperature to 22°C", client_request=mock_intent_result.client_request
             )
