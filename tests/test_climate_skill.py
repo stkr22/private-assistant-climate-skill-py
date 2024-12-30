@@ -68,9 +68,8 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
             room="kitchen",
             payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
         )
-        async with AsyncSession(self.engine_async) as session:
-            async with session.begin():
-                session.add_all([mock_device_1, mock_device_2, mock_device_3])
+        async with AsyncSession(self.engine_async) as session, session.begin():
+            session.add_all([mock_device_1, mock_device_2, mock_device_3])
 
         # Fetch devices for "livingroom"
         devices = await self.skill.get_devices(["livingroom"])

@@ -84,6 +84,9 @@ class ClimateSkill(commons.BaseSkill):
             devices.extend(self._device_cache.get(room, []))
         return devices
 
+    async def skill_preparations(self):
+        return await super().skill_preparations()
+
     async def calculate_certainty(self, intent_analysis_result: commons.IntentAnalysisResult) -> float:
         if "temperature" in intent_analysis_result.nouns:
             self.logger.info("Temperature noun detected, certainty set to 1.0.")
@@ -96,7 +99,7 @@ class ClimateSkill(commons.BaseSkill):
         parameters.rooms = intent_analysis_result.rooms or [intent_analysis_result.client_request.room]
         devices = await self.get_devices(parameters.rooms)
         if action == Action.SET:
-            parameters.targets = [device for device in devices]
+            parameters.targets = list(devices)
             if intent_analysis_result.numbers:
                 parameters.temperature = intent_analysis_result.numbers[0].number_token
         self.logger.debug("Parameters found for action %s: %s", action, parameters)
@@ -111,9 +114,8 @@ class ClimateSkill(commons.BaseSkill):
             )
             self.logger.debug("Generated answer using template for action %s.", action)
             return answer
-        else:
-            self.logger.error("No template found for action %s.", action)
-            return "Sorry, I couldn't process your request."
+        self.logger.error("No template found for action %s.", action)
+        return "Sorry, I couldn't process your request."
 
     async def send_mqtt_command(self, action: Action, parameters: Parameters) -> None:
         """Send the MQTT command asynchronously."""

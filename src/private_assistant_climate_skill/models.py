@@ -1,6 +1,6 @@
 import re
 
-from pydantic import ValidationInfo, field_validator
+from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
 MQTT_TOPIC_REGEX = re.compile(r"[\$#\+\s\0-\31]+")
@@ -10,7 +10,7 @@ class SQLModelValidation(SQLModel):
     model_config = {"from_attributes": True, "validate_assignment": True}
 
 
-class ClimateSkillDevice(SQLModelValidation, table=True):  # type: ignore
+class ClimateSkillDevice(SQLModelValidation, table=True):
     id: int | None = Field(default=None, primary_key=True)
     topic: str
     alias: str
@@ -19,7 +19,7 @@ class ClimateSkillDevice(SQLModelValidation, table=True):  # type: ignore
 
     @field_validator("topic")
     @classmethod
-    def validate_topic(cls, value: str, info: ValidationInfo):
+    def validate_topic(cls, value: str):
         if MQTT_TOPIC_REGEX.findall(value):
             raise ValueError("Topic must not contain invalid characters.")
         if len(value) > 128:
