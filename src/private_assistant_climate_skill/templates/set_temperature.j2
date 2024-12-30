@@ -1,1 +1,1 @@
-The temperature has been set to {{ parameters.temperature }} Celsius{% if parameters.rooms %} for {% if parameters.rooms|length == 1 %}the room {{ parameters.rooms[0] }}{% else %}the rooms {{ parameters.rooms|join(', ') }}{% endif %}{% endif %}.
+The temperature has been set to {{ parameters.temperature }} Celsius{% if parameters.rooms %} for {% if parameters.rooms|length == 1 %}the room {{ parameters.rooms[0] }}{% else %}the rooms {{ parameters.rooms[:-1]|join(', ') }} and {{ parameters.rooms[-1] }}{% endif %}{% endif %}.

@@ -44,7 +44,7 @@ def render_template(template_name, parameters, env, action=None):
             ],
             ["Living Room", "Bedroom"],
             20,
-            "The temperature has been set to 20 Celsius for the rooms Living Room, Bedroom.",
+            "The temperature has been set to 20 Celsius for the rooms Living Room and Bedroom.",
         ),
         (
             [],
