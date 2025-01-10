@@ -2,15 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Main",
+            "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/private_assistant_climate_skill/main.py",
+            "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": false,
+            "justMyCode": true,
             "env": {
-                "LOG_LEVEL": "DEBUG"
-            }
+                "LOG_LEVEL": "DEBUG",
+                "TYPER_DEBUG": "1"
+            },
+            "args": [
+                "./.local_config.yaml"
+            ]
         }
     ]
 }
