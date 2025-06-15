@@ -5,9 +5,6 @@
 			"dockerfile": "Containerfile",
 			"context": "."
 		},
-	"runArgs": [
-		"--userns=keep-id"
-	],
 	"customizations": {
 		"vscode": {
 			"extensions": [
