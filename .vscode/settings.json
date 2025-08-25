@@ -25,5 +25,16 @@
     ],
     "cSpell.files": [
         "src"
-    ]
+    ],
+    "terminal.integrated.fontFamily": "MesloLGS NF",
+    "terminal.integrated.fontSize": 11,
+    "editor.fontFamily": "MesloLGS NF",
+    "editor.fontSize": 12,
+    "editor.fontLigatures": true,
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.profiles.linux": {
+        "zsh": {
+            "path": "/usr/bin/zsh"
+        }
+    }
 }

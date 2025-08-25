@@ -1,0 +1,4 @@
+"""Climate Control Skill for Private Assistant.
+
+Enables automated and voice-activated climate control within smart home environments.
+"""
