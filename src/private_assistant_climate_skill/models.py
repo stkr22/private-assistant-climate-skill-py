@@ -4,6 +4,7 @@ from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
 MQTT_TOPIC_REGEX = re.compile(r"[\$#\+\s\0-\31]+")
+MAX_TOPIC_LENGTH = 128
 
 
 class SQLModelValidation(SQLModel):
@@ -22,6 +23,6 @@ class ClimateSkillDevice(SQLModelValidation, table=True):
     def validate_topic(cls, value: str):
         if MQTT_TOPIC_REGEX.findall(value):
             raise ValueError("Topic must not contain invalid characters.")
-        if len(value) > 128:
-            raise ValueError("Topic length exceeds maximum allowed limit (128 characters).")
+        if len(value) > MAX_TOPIC_LENGTH:
+            raise ValueError(f"Topic length exceeds maximum allowed limit ({MAX_TOPIC_LENGTH} characters).")
         return value.strip()
