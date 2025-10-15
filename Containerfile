@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/root/.cache \
     uv pip install dist/*.whl
 
 # runtime stage: Python 3.12.8-slim-bookworm
-FROM docker.io/library/python:3.12.8-slim-bookworm@sha256:10f3aaab98db50cba827d3b33a91f39dc9ec2d02ca9b85cbc5008220d07b17f3
+FROM docker.io/library/python:3.12.8-slim-bookworm@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0
 
 ENV PYTHONUNBUFFERED=1
 
