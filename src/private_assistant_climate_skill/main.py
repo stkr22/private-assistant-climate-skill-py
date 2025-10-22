@@ -5,8 +5,8 @@ from typing import Annotated
 import jinja2
 import typer
 from private_assistant_commons import mqtt_connection_handler, skill_config, skill_logger
+from private_assistant_commons.database import PostgresConfig
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import SQLModel
 
 from private_assistant_climate_skill import climate_skill
 
@@ -27,12 +27,13 @@ async def start_skill(
     # Load configuration
     config_obj = skill_config.load_config(config_path, skill_config.SkillConfig)
 
-    # Create an async database engine
-    db_engine_async = create_async_engine(skill_config.PostgresConfig.from_env().connection_string_async)
+    # Create an async database engine for global device registry
+    # AIDEV-NOTE: PostgresConfig uses environment variables from compose.yml
+    db_config = PostgresConfig()
+    db_engine_async = create_async_engine(db_config.connection_string_async)
 
-    # Create tables asynchronously
-    async with db_engine_async.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+    # AIDEV-NOTE: No custom table creation needed - global device registry tables
+    # are managed by BaseSkill and commons library
 
     # Set up Jinja2 template environment
     template_env = jinja2.Environment(

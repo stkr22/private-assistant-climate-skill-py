@@ -26,21 +26,41 @@ def render_template(template_name, parameters, env, action=None):
     "targets, rooms, temperature, expected_output",
     [
         (
-            [ClimateSkillDevice(alias="Living Room Thermostat")],
+            [
+                ClimateSkillDevice(
+                    alias="Living Room Thermostat",
+                    topic="livingroom/climate",
+                    room="livingroom",
+                )
+            ],
             ["Living Room"],
             22,
             "The temperature has been set to 22 Celsius for the room Living Room.",
         ),
         (
-            [ClimateSkillDevice(alias="Bedroom Thermostat")],
+            [
+                ClimateSkillDevice(
+                    alias="Bedroom Thermostat",
+                    topic="bedroom/climate",
+                    room="bedroom",
+                )
+            ],
             ["Bedroom"],
             18,
             "The temperature has been set to 18 Celsius for the room Bedroom.",
         ),
         (
             [
-                ClimateSkillDevice(alias="Living Room Thermostat"),
-                ClimateSkillDevice(alias="Bedroom Thermostat"),
+                ClimateSkillDevice(
+                    alias="Living Room Thermostat",
+                    topic="livingroom/climate",
+                    room="livingroom",
+                ),
+                ClimateSkillDevice(
+                    alias="Bedroom Thermostat",
+                    topic="bedroom/climate",
+                    room="bedroom",
+                ),
             ],
             ["Living Room", "Bedroom"],
             20,

@@ -1,221 +1,375 @@
 import logging
 import unittest
+import uuid
 from unittest.mock import AsyncMock, Mock, patch
 
 import jinja2
-from private_assistant_commons import messages
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlmodel import SQLModel
+from private_assistant_commons import ClassifiedIntent, ClientRequest, Entity, EntityType, IntentRequest, IntentType
+from private_assistant_commons.database import GlobalDevice, Room
 
-from private_assistant_climate_skill import models
-from private_assistant_climate_skill.climate_skill import Action, ClimateSkill, Parameters
+from private_assistant_climate_skill.climate_skill import ClimateSkill, Parameters
 
 
 class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
-    @classmethod
-    def setUpClass(cls):
-        # Set up an in-memory SQLite database for async usage
-        cls.engine_async = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    """Test suite for ClimateSkill with new intent-based architecture."""
 
     async def asyncSetUp(self):
-        # Create tables asynchronously before each test
-        async with self.engine_async.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
-
+        """Set up test fixtures before each test."""
         # Create mock components for testing
         self.mock_mqtt_client = AsyncMock()
         self.mock_config = Mock()
+        self.mock_config.client_id = "climate_skill_test"  # Required by BaseSkill
+        self.mock_config.intent_analysis_result_topic = "test/intent"
         self.mock_template_env = Mock(spec=jinja2.Environment)
-        self.mock_task_group = AsyncMock()
-        self.mock_logger = Mock(logging.Logger)
-        async with self.engine_async.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
 
-        # Create an instance of ClimateSkill using the in-memory DB and mocked dependencies
+        # Mock task_group with proper create_task behavior
+        self.mock_task_group = Mock()
+
+        def create_mock_task(_coro, **kwargs):  # noqa: ARG001
+            mock_task = Mock()
+            mock_task.add_done_callback = Mock()
+            return mock_task
+
+        self.mock_task_group.create_task = Mock(side_effect=create_mock_task)
+
+        self.mock_logger = Mock(spec=logging.Logger)
+
+        # Create mock templates
+        self.mock_help_template = Mock()
+        self.mock_help_template.render.return_value = "Help text"
+        self.mock_set_template = Mock()
+        self.mock_set_template.render.return_value = "Temperature set"
+
+        self.mock_template_env.get_template.side_effect = lambda name: {
+            "help.j2": self.mock_help_template,
+            "set_temperature.j2": self.mock_set_template,
+        }[name]
+
+        # Create mock database engine (not actually used in unit tests)
+        self.mock_db_engine = Mock()
+
+        # Create skill instance
         self.skill = ClimateSkill(
             config_obj=self.mock_config,
             mqtt_client=self.mock_mqtt_client,
-            db_engine=self.engine_async,
+            db_engine=self.mock_db_engine,
             template_env=self.mock_template_env,
             task_group=self.mock_task_group,
             logger=self.mock_logger,
         )
 
-    async def asyncTearDown(self):
-        # Drop tables asynchronously after each test to ensure a clean state
-        async with self.engine_async.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.drop_all)
+    def _create_mock_global_device(self, name: str, room_name: str, topic: str, payload_template: str) -> GlobalDevice:
+        """Create a mock GlobalDevice for testing.
 
-    async def test_get_devices(self):
-        # Insert mock devices into the in-memory SQLite database
-        mock_device_1 = models.ClimateSkillDevice(
-            id=1,
-            topic="livingroom/climate/main",
-            alias="main thermostat",
-            room="livingroom",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
+        Args:
+            name: Device name
+            room_name: Room name
+            topic: MQTT topic
+            payload_template: Jinja2 template for MQTT payload
+
+        Returns:
+            Mock GlobalDevice object
+        """
+        mock_room = Mock(spec=Room)
+        mock_room.name = room_name
+
+        mock_device = Mock(spec=GlobalDevice)
+        mock_device.name = name
+        mock_device.room = mock_room
+        mock_device.device_attributes = {
+            "topic": topic,
+            "payload_set_template": payload_template,
+        }
+        return mock_device
+
+    def _create_mock_entity(self, entity_type: str, raw_text: str, normalized_value: str | int) -> Entity:
+        """Create a mock Entity for testing.
+
+        Args:
+            entity_type: Type of entity (room, number, etc.)
+            raw_text: Original text from user
+            normalized_value: Normalized/extracted value
+
+        Returns:
+            Entity object
+        """
+        return Entity(
+            type=EntityType(entity_type),
+            raw_text=raw_text,
+            normalized_value=normalized_value,
+            confidence=0.9,
+            metadata={},
         )
-        mock_device_2 = models.ClimateSkillDevice(
-            id=2,
-            topic="bedroom/climate/main",
-            alias="bedroom thermostat",
-            room="bedroom",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
+
+    async def test_get_devices_from_global_registry(self):
+        """Test getting devices from global device registry."""
+        # Mock global_devices
+        mock_device_1 = self._create_mock_global_device(
+            "Living Room Thermostat",
+            "livingroom",
+            "livingroom/climate/main",
+            '{"occupied_heating_setpoint": {{ temperature }}}',
         )
-        mock_device_3 = models.ClimateSkillDevice(
-            topic="kitchen/climate/main",
-            alias="kitchen thermostat",
-            room="kitchen",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
+        mock_device_2 = self._create_mock_global_device(
+            "Bedroom Thermostat", "bedroom", "bedroom/climate/main", '{"occupied_heating_setpoint": {{ temperature }}}'
         )
-        async with AsyncSession(self.engine_async) as session, session.begin():
-            session.add_all([mock_device_1, mock_device_2, mock_device_3])
+        mock_device_3 = self._create_mock_global_device(
+            "Kitchen Thermostat", "kitchen", "kitchen/climate/main", '{"occupied_heating_setpoint": {{ temperature }}}'
+        )
+
+        self.skill.global_devices = [mock_device_1, mock_device_2, mock_device_3]
 
         # Fetch devices for "livingroom"
         devices = await self.skill.get_devices(["livingroom"])
 
-        # Assert that the correct device is returned
         self.assertEqual(len(devices), 1)
-        self.assertEqual(devices[0].alias, "main thermostat")
+        self.assertEqual(devices[0].alias, "Living Room Thermostat")
         self.assertEqual(devices[0].topic, "livingroom/climate/main")
+        self.assertEqual(devices[0].room, "livingroom")
 
         # Fetch devices for "livingroom" and "bedroom"
         devices = await self.skill.get_devices(["livingroom", "bedroom"])
 
-        # Assert that the correct devices are returned
         self.assertEqual(len(devices), 2)
-        self.assertEqual(devices[0].alias, "main thermostat")
-        self.assertEqual(devices[0].topic, "livingroom/climate/main")
-        self.assertEqual(devices[1].alias, "bedroom thermostat")
-        self.assertEqual(devices[1].topic, "bedroom/climate/main")
+        self.assertEqual(devices[0].alias, "Living Room Thermostat")
+        self.assertEqual(devices[1].alias, "Bedroom Thermostat")
 
-    async def test_find_parameters(self):
-        # Insert mock devices into the in-memory SQLite database
-        mock_device_1 = models.ClimateSkillDevice(
-            topic="livingroom/climate/main",
-            alias="main thermostat",
-            room="livingroom",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
+    async def test_find_parameters_with_temperature(self):
+        """Test extracting parameters from classified intent with temperature."""
+        # Mock global_devices
+        mock_device = self._create_mock_global_device(
+            "Living Room Thermostat",
+            "livingroom",
+            "livingroom/climate/main",
+            '{"occupied_heating_setpoint": {{ temperature }}}',
         )
-        mock_device_2 = models.ClimateSkillDevice(
-            topic="bedroom/climate/main",
-            alias="bedroom thermostat",
-            room="bedroom",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
+        self.skill.global_devices = [mock_device]
+
+        # Create mock classified intent
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.95,
+            entities={
+                "numbers": [self._create_mock_entity("number", "22", 22)],
+                "rooms": [self._create_mock_entity("room", "living room", "livingroom")],
+            },
+            raw_text="set temperature to 22 degrees in living room",
         )
-        mock_device_3 = models.ClimateSkillDevice(
-            topic="kitchen/climate/main",
-            alias="kitchen thermostat",
-            room="kitchen",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
-        )
 
-        mock_intent_result = Mock(spec=messages.IntentAnalysisResult)
-        mock_client_request = Mock()
-        mock_client_request.room = "kitchen"
-        mock_intent_result.client_request = mock_client_request
-        mock_intent_result.rooms = ["livingroom", "bedroom"]  # Updated to reflect multiple rooms
-        mock_intent_result.nouns = ["temperature"]
-        mock_intent_result.numbers = [Mock(number_token=22)]  # Setting temperature to 22°C
+        # Find parameters
+        parameters = await self.skill.find_parameters(IntentType.DEVICE_SET, classified_intent, "livingroom")
 
-        with patch.object(self.skill, "get_devices", return_value=[mock_device_1, mock_device_2]):
-            # Find parameters for setting the temperature
-            parameters = await self.skill.find_parameters(Action.SET, mock_intent_result)
-
-        # Assert that the correct devices and temperature are in the parameters
-        self.assertEqual(len(parameters.targets), 2)
-        self.assertEqual(parameters.targets[0].alias, "main thermostat")
-        self.assertEqual(parameters.targets[1].alias, "bedroom thermostat")
-        self.assertEqual(parameters.temperature, 22)
-
-        mock_intent_result = Mock(spec=messages.IntentAnalysisResult)
-        mock_client_request = Mock()
-        mock_client_request.room = "kitchen"
-        mock_intent_result.client_request = mock_client_request
-        mock_intent_result.rooms = []
-        mock_intent_result.nouns = ["temperature"]
-        mock_intent_result.numbers = [Mock(number_token=22)]  # Setting temperature to 22°C
-
-        with patch.object(self.skill, "get_devices", return_value=[mock_device_3]):
-            # Find parameters for setting the temperature
-            parameters = await self.skill.find_parameters(Action.SET, mock_intent_result)
-
-        # Assert that the correct devices and temperature are in the parameters
         self.assertEqual(len(parameters.targets), 1)
-        self.assertEqual(parameters.targets[0].alias, "kitchen thermostat")
+        self.assertEqual(parameters.targets[0].alias, "Living Room Thermostat")
         self.assertEqual(parameters.temperature, 22)
+        self.assertEqual(parameters.rooms, ["livingroom"])
 
-    async def test_calculate_certainty_with_temperature(self):
-        mock_intent_result = Mock(spec=messages.IntentAnalysisResult)
-        mock_intent_result.nouns = ["temperature"]
-        certainty = await self.skill.calculate_certainty(mock_intent_result)
-        self.assertEqual(certainty, 1.0)
+    async def test_find_parameters_fallback_to_current_room(self):
+        """Test that parameters fallback to current room when no room entities."""
+        # Mock global_devices
+        mock_device = self._create_mock_global_device(
+            "Kitchen Thermostat", "kitchen", "kitchen/climate/main", '{"occupied_heating_setpoint": {{ temperature }}}'
+        )
+        self.skill.global_devices = [mock_device]
 
-    async def test_calculate_certainty_without_temperature(self):
-        mock_intent_result = Mock(spec=messages.IntentAnalysisResult)
-        mock_intent_result.nouns = ["humidity"]  # No "temperature"
-        certainty = await self.skill.calculate_certainty(mock_intent_result)
-        self.assertEqual(certainty, 0)
+        # Create mock classified intent without room entities
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.95,
+            entities={
+                "numbers": [self._create_mock_entity("number", "20", 20)],
+            },
+            raw_text="set temperature to 20 degrees",
+        )
 
-    async def test_send_mqtt_command(self):
-        # Create mock device
-        mock_device = models.ClimateSkillDevice(
-            id=1,
-            topic="livingroom/climate/main",
-            alias="main thermostat",
+        # Find parameters (should use current_room)
+        parameters = await self.skill.find_parameters(IntentType.DEVICE_SET, classified_intent, "kitchen")
+
+        self.assertEqual(len(parameters.targets), 1)
+        self.assertEqual(parameters.targets[0].alias, "Kitchen Thermostat")
+        self.assertEqual(parameters.temperature, 20)
+        self.assertEqual(parameters.rooms, ["kitchen"])
+
+    async def test_handle_device_set(self):
+        """Test handling DEVICE_SET intent."""
+        # Mock global_devices
+        mock_device = self._create_mock_global_device(
+            "Living Room Thermostat",
+            "livingroom",
+            "livingroom/climate/main",
+            '{"occupied_heating_setpoint": {{ temperature }}}',
+        )
+        self.skill.global_devices = [mock_device]
+
+        # Create mock intent request
+        client_request = ClientRequest(
+            id=uuid.uuid4(),
+            text="set temperature to 22 degrees",
             room="livingroom",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
+            output_topic="test/output",
         )
 
-        # Mock parameters for setting the temperature
-        parameters = Parameters(targets=[mock_device], temperature=22)
-
-        # Call the async method to send the MQTT command
-        await self.skill.send_mqtt_command(Action.SET, parameters)
-
-        # Assert that the MQTT client sent the correct payload to the correct topic
-        self.mock_mqtt_client.publish.assert_called_once_with(
-            "livingroom/climate/main", '{"occupied_heating_setpoint": 22}', qos=1
-        )
-        self.mock_logger.info.assert_called_with(
-            "Sending payload %s to topic %s via MQTT.", '{"occupied_heating_setpoint": 22}', "livingroom/climate/main"
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.95,
+            entities={
+                "numbers": [self._create_mock_entity("number", "22", 22)],
+            },
+            raw_text="set temperature to 22 degrees",
         )
 
-    async def test_process_request_with_set_action(self):
-        mock_device = models.ClimateSkillDevice(
-            id=1,
-            topic="livingroom/climate/main",
-            alias="main thermostat",
+        intent_request = IntentRequest(
+            classified_intent=classified_intent,
+            client_request=client_request,
+        )
+
+        # Mock send_response (runs in background task, not asserted)
+        with patch.object(self.skill, "send_response"):
+            await self.skill._handle_device_set(intent_request)
+            # Verify handler completed without error
+
+    async def test_handle_device_set_no_devices(self):
+        """Test DEVICE_SET with no devices found."""
+        # Empty global_devices
+        self.skill.global_devices = []
+
+        # Create mock intent request
+        client_request = ClientRequest(
+            id=uuid.uuid4(),
+            text="set temperature to 22 degrees",
             room="livingroom",
-            payload_set_template='{"occupied_heating_setpoint": {{ temperature }}}',
+            output_topic="test/output",
         )
-        # Mock the client request
-        mock_client_request = Mock()
-        mock_client_request.room = "livingroom"
-        mock_client_request.text = "set the temperature to 22 degrees"
 
-        # Mock the IntentAnalysisResult with spec
-        mock_intent_result = Mock(spec=messages.IntentAnalysisResult)
-        mock_intent_result.client_request = mock_client_request
-        mock_intent_result.verbs = ["set"]
-        mock_intent_result.nouns = ["temperature"]
-        mock_intent_result.numbers = [Mock(number_token=22)]  # Setting temperature to 22°C
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.95,
+            entities={
+                "numbers": [self._create_mock_entity("number", "22", 22)],
+            },
+            raw_text="set temperature to 22 degrees",
+        )
 
-        # Set up mock parameters and method patches
-        mock_parameters = Parameters(targets=[mock_device], temperature=22)
+        intent_request = IntentRequest(
+            classified_intent=classified_intent,
+            client_request=client_request,
+        )
 
-        with (
-            patch.object(self.skill, "get_answer", return_value="Setting temperature to 22°C") as mock_get_answer,
-            patch.object(self.skill, "send_mqtt_command") as mock_send_mqtt_command,
-            patch.object(self.skill, "find_parameters", return_value=mock_parameters),
-            patch.object(self.skill, "send_response") as mock_send_response,
-        ):
-            # Execute the process_request method
-            await self.skill.process_request(mock_intent_result)
+        # Mock send_response
+        with patch.object(self.skill, "send_response") as mock_send_response:
+            await self.skill._handle_device_set(intent_request)
 
-            # Assert that methods were called with expected arguments
-            mock_get_answer.assert_called_once_with(Action.SET, mock_parameters)
-            mock_send_mqtt_command.assert_called_once_with(Action.SET, mock_parameters)
-            mock_send_response.assert_called_once_with(
-                "Setting temperature to 22°C", client_request=mock_intent_result.client_request
-            )
+            # Verify error response sent
+            mock_send_response.assert_called_once()
+            args = mock_send_response.call_args[0]
+            self.assertIn("couldn't find", args[0].lower())
+
+    async def test_handle_system_help(self):
+        """Test handling SYSTEM_HELP intent."""
+        # Create mock intent request
+        client_request = ClientRequest(
+            id=uuid.uuid4(),
+            text="help with climate",
+            room="livingroom",
+            output_topic="test/output",
+        )
+
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.SYSTEM_HELP,
+            confidence=0.85,
+            entities={},
+            raw_text="help with climate",
+        )
+
+        intent_request = IntentRequest(
+            classified_intent=classified_intent,
+            client_request=client_request,
+        )
+
+        # Test the handler runs without error
+        with patch.object(self.skill, "send_response"):
+            await self.skill._handle_system_help(intent_request)
+            # Verify handler completed successfully (response sent in background task)
+
+    async def test_process_request_routing(self):
+        """Test that process_request routes to correct handlers."""
+        client_request = ClientRequest(
+            id=uuid.uuid4(),
+            text="set temperature to 22 degrees",
+            room="livingroom",
+            output_topic="test/output",
+        )
+
+        # Test DEVICE_SET routing
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.95,
+            entities={"numbers": [self._create_mock_entity("number", "22", 22)]},
+            raw_text="set temperature to 22 degrees",
+        )
+
+        intent_request = IntentRequest(
+            classified_intent=classified_intent,
+            client_request=client_request,
+        )
+
+        with patch.object(self.skill, "_handle_device_set") as mock_handle_set:
+            await self.skill.process_request(intent_request)
+            mock_handle_set.assert_called_once_with(intent_request)
+
+        # Test SYSTEM_HELP routing
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.SYSTEM_HELP,
+            confidence=0.85,
+            entities={},
+            raw_text="help with climate",
+        )
+
+        intent_request = IntentRequest(
+            classified_intent=classified_intent,
+            client_request=client_request,
+        )
+
+        with patch.object(self.skill, "_handle_system_help") as mock_handle_help:
+            await self.skill.process_request(intent_request)
+            mock_handle_help.assert_called_once_with(intent_request)
+
+    async def test_process_request_unsupported_intent(self):
+        """Test handling of unsupported intent types."""
+        client_request = ClientRequest(
+            id=uuid.uuid4(),
+            text="turn on the light",
+            room="livingroom",
+            output_topic="test/output",
+        )
+
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_ON,  # Unsupported for climate skill
+            confidence=0.90,
+            entities={},
+            raw_text="turn on the light",
+        )
+
+        intent_request = IntentRequest(
+            classified_intent=classified_intent,
+            client_request=client_request,
+        )
+
+        with patch.object(self.skill, "send_response") as mock_send_response:
+            await self.skill.process_request(intent_request)
+
+            # Verify error response sent
+            mock_send_response.assert_called_once()
+            args = mock_send_response.call_args[0]
+            self.assertIn("not sure", args[0].lower())
+
+    async def test_render_response(self):
+        """Test rendering response with templates."""
+        parameters = Parameters()
+        parameters.temperature = 22
+        parameters.rooms = ["livingroom"]
+
+        response = self.skill._render_response(IntentType.DEVICE_SET, parameters)
+
+        self.assertEqual(response, "Temperature set")
+        self.mock_set_template.render.assert_called_once()
