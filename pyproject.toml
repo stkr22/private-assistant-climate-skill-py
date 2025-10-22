@@ -44,7 +44,7 @@ Changelog = "https://github.com/stkr22/private-assistant-climate-skill-py/blob/m
 
 [dependency-groups]
 dev = [
-    "ruff~=0.8.0",
+    "ruff~=0.14.1",
     "mypy~=1.17.0",
     "pytest~=8.4.1",
     "pytest-cov~=6.2.1",
