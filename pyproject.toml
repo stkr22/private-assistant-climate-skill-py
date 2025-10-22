@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "private-assistant-climate-skill"
-version = "1.1.3"
+version = "1.2.0"
 description = "Climate Control Skill for Private Assistant: Enables automated and voice-activated climate control within smart home environments."
 authors = [
     { name = "stkr22", email = "stkr22@github.com" }
