@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.0...v1.2.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* missing cmd in containerfile and update ([e32546f](https://github.com/stkr22/private-assistant-climate-skill-py/commit/e32546fbd6db49df8ce168a820461a556de20162))
+
 ## [1.2.0](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.1.3...v1.2.0) (2025-10-22)
 
 
