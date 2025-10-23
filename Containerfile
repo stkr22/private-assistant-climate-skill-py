@@ -1,5 +1,5 @@
-# Build stage: Python 3.12.8-bookworm
-FROM docker.io/library/python:3.12.8-bookworm@sha256:68ca65265c466f4b64f8ddab669e13bcba8d4ba77ec4c26658d36f2b9d1b1cad as build-python
+# Build stage: Python 3.12.12-trixie
+FROM docker.io/library/python:3.12.12-trixie@sha256:872565c5ac89cafbab19419c699d80bda96e9d0f47a4790e5229bd3aeeeb5da9 AS build-python
 
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
@@ -19,8 +19,8 @@ RUN --mount=type=cache,target=/root/.cache \
     uv venv && \
     uv pip install dist/*.whl
 
-# runtime stage: Python 3.12.8-slim-bookworm
-FROM docker.io/library/python:3.12.8-slim-bookworm@sha256:2199a62885a12290dc9c5be3ca0681d367576ab7bf037da120e564723292a2f0
+# runtime stage: Python 3.12.12-slim-trixie
+FROM docker.io/library/python:3.12.12-slim-trixie@sha256:e97cf9a2e84d604941d9902f00616db7466ff302af4b1c3c67fb7c522efa8ed9
 
 ENV PYTHONUNBUFFERED=1
 
@@ -33,3 +33,5 @@ COPY --from=build-python /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 # Set the user to 'appuser'
 USER appuser
+
+CMD ["private-assistant-climate-skill"]
