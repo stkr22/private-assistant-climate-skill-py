@@ -66,7 +66,7 @@ class ClimateSkill(commons.BaseSkill):
         }
 
         # AIDEV-NOTE: Device types this skill can control
-        self.supported_device_types = ["hvac"]
+        self.supported_device_types = ["thermostat"]
 
         # AIDEV-NOTE: Template preloading at init prevents runtime template lookup failures
         self._load_templates()
@@ -135,7 +135,7 @@ class ClimateSkill(commons.BaseSkill):
         parameters = Parameters()
 
         # Extract rooms from entities, fallback to current room
-        room_entities = classified_intent.entities.get("rooms", [])
+        room_entities = classified_intent.entities.get("room", [])
         parameters.rooms = [room.normalized_value for room in room_entities] if room_entities else [current_room]
 
         # Get devices for the target rooms
@@ -145,7 +145,7 @@ class ClimateSkill(commons.BaseSkill):
             parameters.targets = list(devices)
 
             # Extract temperature from number entities
-            number_entities = classified_intent.entities.get("numbers", [])
+            number_entities = classified_intent.entities.get("number", [])
             if number_entities:
                 # normalized_value for numbers should be the numeric value
                 parameters.temperature = int(number_entities[0].normalized_value)
@@ -154,6 +154,44 @@ class ClimateSkill(commons.BaseSkill):
 
         self.logger.debug("Parameters found for intent %s: %s", intent_type, parameters)
         return parameters
+
+    def _is_climate_intent(self, classified_intent: ClassifiedIntent) -> bool:
+        """Validate if the intent is actually for climate control.
+
+        Checks for:
+        1. Device entity with device_type in supported_device_types OR is_generic=True for generic references
+        2. Number entity with unit "celsius" indicating temperature
+
+        Args:
+            classified_intent: The classified intent with extracted entities
+
+        Returns:
+            True if intent is for climate control, False otherwise
+        """
+        # Check for device entities
+        device_entities = classified_intent.entities.get("device", [])
+        for device_entity in device_entities:
+            device_type = device_entity.metadata.get("device_type", "")
+            is_generic = device_entity.metadata.get("is_generic", False)
+
+            # Accept if device_type is in supported_device_types OR it's a generic device reference
+            if device_type in self.supported_device_types or (
+                is_generic and device_entity.normalized_value in self.supported_device_types
+            ):
+                self.logger.debug("Found climate device entity: %s", device_entity.normalized_value)
+                return True
+
+        # Check for number entities with celsius unit (temperature)
+        number_entities = classified_intent.entities.get("number", [])
+        for number_entity in number_entities:
+            unit = number_entity.metadata.get("unit", "")
+            if unit == "celsius":
+                self.logger.debug("Found temperature number entity with celsius unit")
+                return True
+
+        # No climate-related entities found
+        self.logger.debug("No climate-related entities found in intent")
+        return False
 
     def _render_response(self, intent_type: IntentType, parameters: Parameters) -> str:
         """Render response using template for given intent type.
@@ -265,6 +303,11 @@ class ClimateSkill(commons.BaseSkill):
             intent_type,
             classified_intent.confidence,
         )
+
+        # Validate DEVICE_SET intents are actually for climate control
+        if intent_type == IntentType.DEVICE_SET and not self._is_climate_intent(classified_intent):
+            self.logger.info("DEVICE_SET intent is not for climate control, ignoring")
+            return
 
         # Route to appropriate handler
         if intent_type == IntentType.DEVICE_SET:
