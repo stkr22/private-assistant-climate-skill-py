@@ -108,11 +108,11 @@ async def test_skill_entity(db_session) -> Skill:
 @pytest.fixture
 async def test_device_type(db_session) -> DeviceType:
     """Create a test device type in the database."""
-    result = await db_session.exec(select(DeviceType).where(DeviceType.name == "hvac"))
+    result = await db_session.exec(select(DeviceType).where(DeviceType.name == "thermostat"))
     device_type = result.first()
 
     if device_type is None:
-        device_type = DeviceType(name="hvac")
+        device_type = DeviceType(name="thermostat")
         db_session.add(device_type)
         await db_session.flush()
         await db_session.refresh(device_type)
@@ -133,9 +133,7 @@ async def test_room(db_session) -> Room:
 
 
 @pytest.fixture
-async def test_device(
-    db_session, test_skill_entity, test_device_type, test_room
-) -> AsyncGenerator[GlobalDevice, None]:
+async def test_device(db_session, test_skill_entity, test_device_type, test_room) -> AsyncGenerator[GlobalDevice, None]:
     """Create a single test device in the database.
 
     Note: This fixture must be created BEFORE the running_skill fixture
@@ -407,7 +405,7 @@ class TestSetTemperatureCommand:
             raw_text="22",
             normalized_value=target_temperature,
             confidence=0.9,
-            metadata={},
+            metadata={"unit": "celsius"},
             linked_to=[],
         )
 
@@ -415,7 +413,7 @@ class TestSetTemperatureCommand:
             id=uuid.uuid4(),
             intent_type=IntentType.DEVICE_SET,
             confidence=0.9,
-            entities={"numbers": [number_entity]},
+            entities={"number": [number_entity]},
             alternative_intents=[],
             raw_text="set temperature to 22 degrees",
             timestamp=datetime.now(),
@@ -505,7 +503,7 @@ class TestRoomWideSetTemperature:
             raw_text="20",
             normalized_value=target_temperature,
             confidence=0.9,
-            metadata={},
+            metadata={"unit": "celsius"},
             linked_to=[],
         )
 
@@ -513,7 +511,7 @@ class TestRoomWideSetTemperature:
             id=uuid.uuid4(),
             intent_type=IntentType.DEVICE_SET,
             confidence=0.9,
-            entities={"numbers": [number_entity]},
+            entities={"number": [number_entity]},
             alternative_intents=[],
             raw_text="set temperature to 20 degrees",
             timestamp=datetime.now(),
@@ -594,7 +592,7 @@ class TestDeviceNotFound:
             raw_text="25",
             normalized_value=25,
             confidence=0.9,
-            metadata={},
+            metadata={"unit": "celsius"},
             linked_to=[],
         )
 
@@ -602,7 +600,7 @@ class TestDeviceNotFound:
             id=uuid.uuid4(),
             intent_type=IntentType.DEVICE_SET,
             confidence=0.9,
-            entities={"numbers": [number_entity]},
+            entities={"number": [number_entity]},
             alternative_intents=[],
             raw_text="set temperature to 25 degrees",
             timestamp=datetime.now(),

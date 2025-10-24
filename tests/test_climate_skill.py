@@ -103,44 +103,50 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_devices_from_global_registry(self):
         """Test getting devices from global device registry."""
-        # Mock global_devices
+        # Mock global_devices with realistic MQTT topics and payload templates
         mock_device_1 = self._create_mock_global_device(
-            "Living Room Thermostat",
-            "livingroom",
-            "livingroom/climate/main",
+            "main",
+            "study",
+            "zigbee2mqtt/study/thermostat/main/set",
             '{"occupied_heating_setpoint": {{ temperature }}}',
         )
         mock_device_2 = self._create_mock_global_device(
-            "Bedroom Thermostat", "bedroom", "bedroom/climate/main", '{"occupied_heating_setpoint": {{ temperature }}}'
+            "main",
+            "office",
+            "zigbee2mqtt/office/thermostat/main/set",
+            '{"occupied_heating_setpoint": {{ temperature }}}',
         )
         mock_device_3 = self._create_mock_global_device(
-            "Kitchen Thermostat", "kitchen", "kitchen/climate/main", '{"occupied_heating_setpoint": {{ temperature }}}'
+            "main",
+            "workshop",
+            "zigbee2mqtt/workshop/thermostat/main/set",
+            '{"occupied_heating_setpoint": {{ temperature }}}',
         )
 
         self.skill.global_devices = [mock_device_1, mock_device_2, mock_device_3]
 
-        # Fetch devices for "livingroom"
-        devices = await self.skill.get_devices(["livingroom"])
+        # Fetch devices for "study"
+        devices = await self.skill.get_devices(["study"])
 
         self.assertEqual(len(devices), 1)
-        self.assertEqual(devices[0].alias, "Living Room Thermostat")
-        self.assertEqual(devices[0].topic, "livingroom/climate/main")
-        self.assertEqual(devices[0].room, "livingroom")
+        self.assertEqual(devices[0].alias, "main")
+        self.assertEqual(devices[0].topic, "zigbee2mqtt/study/thermostat/main/set")
+        self.assertEqual(devices[0].room, "study")
 
-        # Fetch devices for "livingroom" and "bedroom"
-        devices = await self.skill.get_devices(["livingroom", "bedroom"])
+        # Fetch devices for "study" and "office"
+        devices = await self.skill.get_devices(["study", "office"])
 
         self.assertEqual(len(devices), 2)
-        self.assertEqual(devices[0].alias, "Living Room Thermostat")
-        self.assertEqual(devices[1].alias, "Bedroom Thermostat")
+        self.assertEqual(devices[0].alias, "main")
+        self.assertEqual(devices[1].alias, "main")
 
     async def test_find_parameters_with_temperature(self):
         """Test extracting parameters from classified intent with temperature."""
-        # Mock global_devices
+        # Mock global_devices with realistic MQTT topic
         mock_device = self._create_mock_global_device(
-            "Living Room Thermostat",
-            "livingroom",
-            "livingroom/climate/main",
+            "main",
+            "study",
+            "zigbee2mqtt/study/thermostat/main/set",
             '{"occupied_heating_setpoint": {{ temperature }}}',
         )
         self.skill.global_devices = [mock_device]
@@ -150,25 +156,28 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
             intent_type=IntentType.DEVICE_SET,
             confidence=0.95,
             entities={
-                "numbers": [self._create_mock_entity("number", "22", 22)],
-                "rooms": [self._create_mock_entity("room", "living room", "livingroom")],
+                "number": [self._create_mock_entity("number", "21", 21)],
+                "room": [self._create_mock_entity("room", "study", "study")],
             },
-            raw_text="set temperature to 22 degrees in living room",
+            raw_text="set temperature to 21 degrees in study",
         )
 
         # Find parameters
-        parameters = await self.skill.find_parameters(IntentType.DEVICE_SET, classified_intent, "livingroom")
+        parameters = await self.skill.find_parameters(IntentType.DEVICE_SET, classified_intent, "study")
 
         self.assertEqual(len(parameters.targets), 1)
-        self.assertEqual(parameters.targets[0].alias, "Living Room Thermostat")
-        self.assertEqual(parameters.temperature, 22)
-        self.assertEqual(parameters.rooms, ["livingroom"])
+        self.assertEqual(parameters.targets[0].alias, "main")
+        self.assertEqual(parameters.temperature, 21)
+        self.assertEqual(parameters.rooms, ["study"])
 
     async def test_find_parameters_fallback_to_current_room(self):
         """Test that parameters fallback to current room when no room entities."""
-        # Mock global_devices
+        # Mock global_devices with realistic MQTT topic
         mock_device = self._create_mock_global_device(
-            "Kitchen Thermostat", "kitchen", "kitchen/climate/main", '{"occupied_heating_setpoint": {{ temperature }}}'
+            "main",
+            "workshop",
+            "zigbee2mqtt/workshop/thermostat/main/set",
+            '{"occupied_heating_setpoint": {{ temperature }}}',
         )
         self.skill.global_devices = [mock_device]
 
@@ -177,26 +186,26 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
             intent_type=IntentType.DEVICE_SET,
             confidence=0.95,
             entities={
-                "numbers": [self._create_mock_entity("number", "20", 20)],
+                "number": [self._create_mock_entity("number", "19", 19)],
             },
-            raw_text="set temperature to 20 degrees",
+            raw_text="set temperature to 19 degrees",
         )
 
         # Find parameters (should use current_room)
-        parameters = await self.skill.find_parameters(IntentType.DEVICE_SET, classified_intent, "kitchen")
+        parameters = await self.skill.find_parameters(IntentType.DEVICE_SET, classified_intent, "workshop")
 
         self.assertEqual(len(parameters.targets), 1)
-        self.assertEqual(parameters.targets[0].alias, "Kitchen Thermostat")
-        self.assertEqual(parameters.temperature, 20)
-        self.assertEqual(parameters.rooms, ["kitchen"])
+        self.assertEqual(parameters.targets[0].alias, "main")
+        self.assertEqual(parameters.temperature, 19)
+        self.assertEqual(parameters.rooms, ["workshop"])
 
     async def test_handle_device_set(self):
         """Test handling DEVICE_SET intent."""
-        # Mock global_devices
+        # Mock global_devices with realistic MQTT topic
         mock_device = self._create_mock_global_device(
-            "Living Room Thermostat",
-            "livingroom",
-            "livingroom/climate/main",
+            "main",
+            "office",
+            "zigbee2mqtt/office/thermostat/main/set",
             '{"occupied_heating_setpoint": {{ temperature }}}',
         )
         self.skill.global_devices = [mock_device]
@@ -204,18 +213,18 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
         # Create mock intent request
         client_request = ClientRequest(
             id=uuid.uuid4(),
-            text="set temperature to 22 degrees",
-            room="livingroom",
-            output_topic="test/output",
+            text="set temperature to 23 degrees",
+            room="office",
+            output_topic="assistant/office/output",
         )
 
         classified_intent = ClassifiedIntent(
             intent_type=IntentType.DEVICE_SET,
             confidence=0.95,
             entities={
-                "numbers": [self._create_mock_entity("number", "22", 22)],
+                "number": [self._create_mock_entity("number", "23", 23)],
             },
-            raw_text="set temperature to 22 degrees",
+            raw_text="set temperature to 23 degrees",
         )
 
         intent_request = IntentRequest(
@@ -236,18 +245,18 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
         # Create mock intent request
         client_request = ClientRequest(
             id=uuid.uuid4(),
-            text="set temperature to 22 degrees",
-            room="livingroom",
-            output_topic="test/output",
+            text="set temperature to 20 degrees",
+            room="garage",
+            output_topic="assistant/garage/output",
         )
 
         classified_intent = ClassifiedIntent(
             intent_type=IntentType.DEVICE_SET,
             confidence=0.95,
             entities={
-                "numbers": [self._create_mock_entity("number", "22", 22)],
+                "number": [self._create_mock_entity("number", "20", 20)],
             },
-            raw_text="set temperature to 22 degrees",
+            raw_text="set temperature to 20 degrees",
         )
 
         intent_request = IntentRequest(
@@ -270,8 +279,8 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
         client_request = ClientRequest(
             id=uuid.uuid4(),
             text="help with climate",
-            room="livingroom",
-            output_topic="test/output",
+            room="study",
+            output_topic="assistant/study/output",
         )
 
         classified_intent = ClassifiedIntent(
@@ -295,17 +304,21 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
         """Test that process_request routes to correct handlers."""
         client_request = ClientRequest(
             id=uuid.uuid4(),
-            text="set temperature to 22 degrees",
-            room="livingroom",
-            output_topic="test/output",
+            text="set temperature to 24 degrees",
+            room="office",
+            output_topic="assistant/office/output",
         )
 
         # Test DEVICE_SET routing
         classified_intent = ClassifiedIntent(
             intent_type=IntentType.DEVICE_SET,
             confidence=0.95,
-            entities={"numbers": [self._create_mock_entity("number", "22", 22)]},
-            raw_text="set temperature to 22 degrees",
+            entities={
+                "number": [
+                    self._create_mock_entity("number", "24", 24).model_copy(update={"metadata": {"unit": "celsius"}})
+                ]
+            },
+            raw_text="set temperature to 24 degrees",
         )
 
         intent_request = IntentRequest(
@@ -339,8 +352,8 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
         client_request = ClientRequest(
             id=uuid.uuid4(),
             text="turn on the light",
-            room="livingroom",
-            output_topic="test/output",
+            room="workshop",
+            output_topic="assistant/workshop/output",
         )
 
         classified_intent = ClassifiedIntent(
@@ -373,3 +386,131 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response, "Temperature set")
         self.mock_set_template.render.assert_called_once()
+
+    async def test_is_climate_intent_with_thermostat_device(self):
+        """Test that thermostat device entities are recognized as climate intents."""
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.9,
+            entities={
+                "device": [
+                    self._create_mock_entity("device", "thermostat", "thermostat").model_copy(
+                        update={"metadata": {"device_type": "thermostat", "is_generic": False}}
+                    )
+                ]
+            },
+            raw_text="set thermostat to 20 degrees",
+        )
+
+        self.assertTrue(self.skill._is_climate_intent(classified_intent))
+
+    async def test_is_climate_intent_with_generic_thermostat(self):
+        """Test that generic thermostat references are recognized as climate intents."""
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.9,
+            entities={
+                "device": [
+                    self._create_mock_entity("device", "thermostat", "thermostat").model_copy(
+                        update={"metadata": {"device_type": "thermostat", "is_generic": True}}
+                    )
+                ]
+            },
+            raw_text="set thermostat to 21 degrees",
+        )
+
+        self.assertTrue(self.skill._is_climate_intent(classified_intent))
+
+    async def test_is_climate_intent_with_celsius_number(self):
+        """Test that number entities with celsius unit are recognized as climate intents."""
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.9,
+            entities={
+                "number": [
+                    self._create_mock_entity("number", "22", 22).model_copy(
+                        update={"metadata": {"unit": "celsius", "next_token": "degrees"}}
+                    )
+                ]
+            },
+            raw_text="set temperature to 22 degrees",
+        )
+
+        self.assertTrue(self.skill._is_climate_intent(classified_intent))
+
+    async def test_is_climate_intent_rejects_curtain_device(self):
+        """Test that curtain device entities are NOT recognized as climate intents."""
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.9,
+            entities={
+                "device": [
+                    self._create_mock_entity("device", "curtains", "curtains").model_copy(
+                        update={"metadata": {"device_type": "curtain", "is_generic": False}}
+                    )
+                ],
+                "number": [
+                    self._create_mock_entity("number", "77", 77).model_copy(
+                        update={"metadata": {"unit": "brightness", "next_token": "."}}
+                    )
+                ],
+            },
+            raw_text="set curtains to level 77",
+        )
+
+        self.assertFalse(self.skill._is_climate_intent(classified_intent))
+
+    async def test_is_climate_intent_rejects_brightness_number(self):
+        """Test that number entities with brightness unit are NOT recognized as climate intents."""
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.9,
+            entities={
+                "number": [
+                    self._create_mock_entity("number", "50", 50).model_copy(
+                        update={"metadata": {"unit": "brightness", "next_token": "percent"}}
+                    )
+                ]
+            },
+            raw_text="set brightness to 50 percent",
+        )
+
+        self.assertFalse(self.skill._is_climate_intent(classified_intent))
+
+    async def test_process_request_ignores_non_climate_intent(self):
+        """Test that non-climate DEVICE_SET intents are ignored without response."""
+        client_request = ClientRequest(
+            id=uuid.uuid4(),
+            text="set curtains to level 77",
+            room="study",
+            output_topic="assistant/study/output",
+        )
+
+        # Curtain device with brightness number (not climate-related)
+        classified_intent = ClassifiedIntent(
+            intent_type=IntentType.DEVICE_SET,
+            confidence=0.9,
+            entities={
+                "device": [
+                    self._create_mock_entity("device", "curtains", "curtains").model_copy(
+                        update={"metadata": {"device_type": "curtain", "is_generic": False}}
+                    )
+                ],
+                "number": [
+                    self._create_mock_entity("number", "77", 77).model_copy(update={"metadata": {"unit": "brightness"}})
+                ],
+            },
+            raw_text="set curtains to level 77",
+        )
+
+        intent_request = IntentRequest(
+            classified_intent=classified_intent,
+            client_request=client_request,
+        )
+
+        # Mock send_response to verify it's NOT called
+        with patch.object(self.skill, "send_response") as mock_send_response:
+            await self.skill.process_request(intent_request)
+
+            # Verify NO response was sent
+            mock_send_response.assert_not_called()
