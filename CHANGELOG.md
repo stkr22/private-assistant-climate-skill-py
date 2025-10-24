@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.1...v1.2.2) (2025-10-24)
+
+
+### Bug Fixes
+
+* :bug: correct entity keys and add device validation [AI] ([9a6ba27](https://github.com/stkr22/private-assistant-climate-skill-py/commit/9a6ba271f1ef4d7a0901dfb1e64ea467f45fec38))
+* :bug: correct entity keys and add device validation [AI] ([29b2306](https://github.com/stkr22/private-assistant-climate-skill-py/commit/29b23069f52f0e7d2a5149913294407a81694889))
+
 ## [1.2.1](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.0...v1.2.1) (2025-10-23)
 
 
