@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.2...v1.2.3) (2025-11-23)
+
+
+### Bug Fixes
+
+* update license to GPL-3.0-only in pyproject.toml ([b543136](https://github.com/stkr22/private-assistant-climate-skill-py/commit/b543136b3efa42b1d3d2215c8440a5fe68eff5aa))
+
 ## [1.2.2](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.1...v1.2.2) (2025-10-24)
 
 
