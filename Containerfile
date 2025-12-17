@@ -1,5 +1,5 @@
 # Build stage: Python 3.13.9-trixie
-FROM docker.io/library/python:3.13.9-trixie@sha256:f2578785b6c139fb4315a4e701a4d2412919ab6301b058eaf49766ce68c97536 AS build-python
+FROM docker.io/library/python:3.13.9-trixie@sha256:5af92a47f819b7a6ec0bb3806862fe2cef7ea345e463be1a56c2830152cbac65 AS build-python
 
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
@@ -7,7 +7,7 @@ ENV UV_LINK_MODE=copy \
     PYTHONUNBUFFERED=1
 
 # Install uv.
-COPY --from=ghcr.io/astral-sh/uv:0.9.11@sha256:5aa820129de0a600924f166aec9cb51613b15b68f1dcd2a02f31a500d2ede568 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9.17@sha256:5cb6b54d2bc3fe2eb9a8483db958a0b9eebf9edff68adedb369df8e7b98711a2 /uv /uvx /bin/
 
 # Set working directory
 WORKDIR /app
