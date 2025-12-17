@@ -1,5 +1,5 @@
 [build-system]
-requires = ["uv_build>=0.9.5,<0.10.0"]
+requires = ["uv_build>=0.9.17,<0.10.0"]
 build-backend = "uv_build"
 
 [project]
@@ -107,10 +107,3 @@ exclude_lines = [
     "def __repr__",
     "if __name__ == .__main__.:",
 ]
-
-[tool.commitizen]
-name = "cz_conventional_commits"
-tag_format = "v$version"
-version_scheme = "pep440"
-version_provider = "scm"
-update_changelog_on_bump = true
