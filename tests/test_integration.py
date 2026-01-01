@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 async def db_engine():
     """Create a database engine for integration tests."""
     db_config = PostgresConfig()
-    engine = create_async_engine(db_config.connection_string_async, echo=False)
+    engine = create_async_engine(str(db_config.connection_string_async), echo=False)
 
     # Ensure tables exist
     async with engine.begin() as conn:
@@ -241,12 +241,10 @@ async def test_devices_multiple(
 
 
 @pytest.fixture
-async def skill_config_file(mqtt_config):
+async def skill_config_file():
     """Create a temporary config file for the skill."""
     config = {
         "client_id": "climate-skill-integration-test",
-        "mqtt_server_host": mqtt_config["host"],
-        "mqtt_server_port": mqtt_config["port"],
         "base_topic": "assistant",
     }
 
