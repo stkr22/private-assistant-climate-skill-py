@@ -35,10 +35,16 @@ from typing import cast
 import aiomqtt
 import pytest
 import yaml
-from private_assistant_commons import ClassifiedIntent, ClientRequest, Entity, EntityType, IntentRequest, IntentType
-from private_assistant_commons.database import PostgresConfig
+from private_assistant_commons import (
+    ClassifiedIntent,
+    ClientRequest,
+    Entity,
+    EntityType,
+    IntentRequest,
+    IntentType,
+    create_skill_engine,
+)
 from private_assistant_commons.database.models import DeviceType, GlobalDevice, Room, Skill
-from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -54,8 +60,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(scope="function")
 async def db_engine():
     """Create a database engine for integration tests."""
-    db_config = PostgresConfig()
-    engine = create_async_engine(str(db_config.connection_string_async), echo=False)
+    engine = create_skill_engine()
 
     # Ensure tables exist
     async with engine.begin() as conn:
