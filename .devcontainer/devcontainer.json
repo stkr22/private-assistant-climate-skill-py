@@ -2,7 +2,7 @@
 	"name": "private-assistant-climate-skill-dev-environment",
 	"dockerComposeFile": "compose.yml",
 	"service": "dev",
-	"workspaceFolder": "/workspace",
+	"workspaceFolder": "/workspace/private-assistant-climate-skill-py",
 	"remoteUser": "vscode",
 	"customizations": {
 		"vscode": {
