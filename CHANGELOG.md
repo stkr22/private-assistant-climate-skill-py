@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.4...v1.2.5) (2026-01-02)
+
+
+### Bug Fixes
+
+* :ambulance: use create_skill_engine() for resilient database connections ([958462c](https://github.com/stkr22/private-assistant-climate-skill-py/commit/958462c49baf757a00ff25147a5ce53969317e7e)), closes [#65](https://github.com/stkr22/private-assistant-climate-skill-py/issues/65)
+
 ## [1.2.4](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.3...v1.2.4) (2026-01-02)
 
 
