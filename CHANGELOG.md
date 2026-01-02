@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.4](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.3...v1.2.4) (2026-01-02)
+
+
+### Bug Fixes
+
+* **deps:** update pydantic and private-assistant-commons; add MqttConfig usage ([72b4fa5](https://github.com/stkr22/private-assistant-climate-skill-py/commit/72b4fa56cdd67dd631a2b796d2bdb008d5d924fa))
+* **deps:** update pydantic and private-assistant-commons; add MqttConfig usage ([3cacd51](https://github.com/stkr22/private-assistant-climate-skill-py/commit/3cacd519b1b6ff0e789c2000886b4667d004a7c3))
+
 ## [1.2.3](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.2...v1.2.3) (2025-11-23)
 
 
