@@ -4,6 +4,10 @@
 	"service": "dev",
 	"workspaceFolder": "/workspace/private-assistant-climate-skill-py",
 	"remoteUser": "vscode",
+    "features": {
+        "ghcr.io/stkr22/devcontainer-features/claude-code:2.0.3": {},
+        "ghcr.io/stkr22/devcontainer-features/uv:1.0.0": {}
+    },
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -17,22 +21,28 @@
 				"github.vscode-github-actions",
 				"oderwat.indent-rainbow",
 				"mhutchie.git-graph",
-				"vivaxy.vscode-conventional-commits",
-				"Anthropic.claude-code"
-			]
+				"vivaxy.vscode-conventional-commits"
+			],
+			"settings": {
+				"files.trimFinalNewlines": true,
+				"files.trimTrailingWhitespace": true,
+				"files.insertFinalNewline": true,
+				"[python]": {
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.fixAll": "explicit",
+						"source.organizeImports": "explicit"
+					},
+					"editor.defaultFormatter": "charliermarsh.ruff"
+				},
+				"python.defaultInterpreterPath": "/workspaces/.venv/bin/python",
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"cSpell.files": [
+					"src"
+				]
+			}
 		}
 	},
-	"mounts": [
-		{
-			"source": "claude-code-bashhistory-${devcontainerId}",
-			"target": "/commandhistory",
-			"type": "volume"
-		},
-		{
-			"source": "claude-code-config-${devcontainerId}",
-			"target": "/home/vscode/.claude",
-			"type": "volume"
-		}
-	],
-	"postCreateCommand": "uv sync --group dev"
+	"postCreateCommand": "uv sync --group dev && uv tool run pre-commit install"
 }

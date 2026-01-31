@@ -1,3 +1,5 @@
+"""Main entry point for the climate skill."""
+
 import asyncio
 import pathlib
 from typing import Annotated
@@ -19,12 +21,14 @@ app = typer.Typer()
 
 @app.command()
 def main(config_path: Annotated[pathlib.Path, typer.Argument(envvar="PRIVATE_ASSISTANT_CONFIG_PATH")]) -> None:
+    """Run the climate skill from the command line."""
     asyncio.run(start_skill(config_path))
 
 
 async def start_skill(
     config_path: pathlib.Path,
 ):
+    """Initialize and start the climate skill with all required dependencies."""
     # Set up logger early on
     logger = skill_logger.SkillLogger.get_logger("Private Assistant ClimateSkill")
 

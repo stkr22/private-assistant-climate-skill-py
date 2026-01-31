@@ -44,7 +44,7 @@ from private_assistant_commons import (
     IntentType,
     create_skill_engine,
 )
-from private_assistant_commons.database.models import DeviceType, GlobalDevice, Room, Skill
+from private_assistant_commons.database import DeviceType, GlobalDevice, Room, Skill
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
