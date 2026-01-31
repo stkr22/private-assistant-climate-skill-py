@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # Development container service
   dev:
-    image: ghcr.io/stkr22/devcontainer-python-container:1.3.0@sha256:03811019a87d4c39e8f26871c3a7c5e99c14124242821c717abdd9a279528687
+    image: ghcr.io/stkr22/devcontainer-python-container:1.4.0@sha256:8830e371adfceaf5c17f8fa261aafea899fbcf940a0b72b76b005500a5279b99
     container_name: climate-skill-dev
     userns_mode: "keep-id"  # Podman: keeps your host UID
     working_dir: /workspace/private-assistant-climate-skill-py

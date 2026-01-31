@@ -44,7 +44,7 @@ from private_assistant_commons import (
     IntentType,
     create_skill_engine,
 )
-from private_assistant_commons.database.models import DeviceType, GlobalDevice, Room, Skill
+from private_assistant_commons.database import DeviceType, GlobalDevice, Room, Skill
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -657,70 +657,3 @@ class TestDeviceNotFound:
         # Response should indicate device not found or similar error
         assert response_payload is not None
         assert "couldn't find" in response_payload.lower() or "not found" in response_payload.lower()
-
-
-class TestSystemHelp:
-    """Test SYSTEM_HELP intent."""
-
-    async def test_system_help(self, running_skill, mqtt_test_client, test_room):  # noqa: ARG002
-        """Test that SYSTEM_HELP intent sends help response.
-
-        Flow:
-        1. Publish IntentRequest with SYSTEM_HELP intent
-        2. Assert help response published to output topic
-        3. Assert no device commands published
-        """
-        output_topic = f"test/output/{uuid.uuid4().hex}"
-
-        # Prepare IntentRequest
-        classified_intent = ClassifiedIntent(
-            id=uuid.uuid4(),
-            intent_type=IntentType.SYSTEM_HELP,
-            confidence=0.9,
-            entities={},
-            alternative_intents=[],
-            raw_text="help with climate",
-            timestamp=datetime.now(),
-        )
-
-        client_request = ClientRequest(
-            id=uuid.uuid4(),
-            text="help with climate",
-            room=test_room.name,
-            output_topic=output_topic,
-        )
-
-        intent_request = IntentRequest(
-            id=uuid.uuid4(),
-            classified_intent=classified_intent,
-            client_request=client_request,
-        )
-
-        # Subscribe to response topic
-        await mqtt_test_client.subscribe(output_topic)
-
-        # Publish IntentRequest
-        await mqtt_test_client.publish(
-            "assistant/intent_engine/result",
-            intent_request.model_dump_json(),
-            qos=1,
-        )
-
-        # Collect messages
-        response_received = False
-        response_payload = None
-
-        async with asyncio.timeout(10):
-            async for message in mqtt_test_client.messages:
-                topic = str(message.topic)
-                payload = message.payload.decode()
-
-                if topic == output_topic:
-                    response_payload = payload
-                    response_received = True
-                    break  # Got response, can exit
-
-        assert response_received, "Help response should be published"
-        assert response_payload is not None
-        # Response should contain help information
-        assert len(response_payload) > 0

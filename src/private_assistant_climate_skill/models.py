@@ -1,3 +1,5 @@
+"""Data models for climate skill devices."""
+
 import re
 from typing import TYPE_CHECKING
 
@@ -25,6 +27,18 @@ class ClimateSkillDevice(BaseModel):
     @field_validator("topic")
     @classmethod
     def validate_topic(cls, value: str):
+        """Validate MQTT topic for invalid characters and length.
+
+        Args:
+            value: MQTT topic string to validate
+
+        Returns:
+            Stripped and validated topic string
+
+        Raises:
+            ValueError: If topic contains invalid characters or exceeds length limit
+
+        """
         if MQTT_TOPIC_REGEX.findall(value):
             raise ValueError("Topic must not contain invalid characters.")
         if len(value) > MAX_TOPIC_LENGTH:
@@ -43,6 +57,7 @@ class ClimateSkillDevice(BaseModel):
 
         Raises:
             ValueError: If required device_attributes are missing
+
         """
         attrs = global_device.device_attributes or {}
 

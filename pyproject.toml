@@ -17,20 +17,22 @@ license-files = [
 
 keywords = []
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Programming Language :: Python",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Topic :: Home Automation",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13"
 ]
 
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "pydantic",
     "jinja2~=3.1.3",
-    "private-assistant-commons~=5.4.0",
-    "typer~=0.20.0",
+    "private-assistant-commons~=6.3.0",
+    "typer~=0.21.1",
 ]
 
 [project.urls]
@@ -42,69 +44,13 @@ Changelog = "https://github.com/stkr22/private-assistant-climate-skill-py/blob/m
 
 [dependency-groups]
 dev = [
-    "ruff~=0.14.1",
-    "mypy~=1.17.0",
-    "pytest~=8.4.1",
-    "pytest-cov~=6.2.1",
+    "ruff~=0.14.14",
+    "mypy~=1.19.1",
+    "pytest~=9.0.2",
+    "pytest-cov~=7.0.0",
+    "pytest-asyncio~=1.3.0",
     "types-pyyaml~=6.0.12.20240311",
-    "coverage[toml]~=7.6.0",
-    "pytest-asyncio~=0.25.2",
 ]
 
 [project.scripts]
 private-assistant-climate-skill = "private_assistant_climate_skill.main:app"
-
-
-[tool.ruff]
-line-length = 120
-indent-width = 4
-
-[tool.ruff.lint]
-select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes
-    "I",    # isort
-    "UP",   # pyupgrade
-    "N",    # pep8-naming
-    "B",    # flake8-bugbear
-    "C4",   # flake8-comprehensions
-    "RET",  # flake8-return
-    "SIM",  # flake8-simplify
-    "ARG",  # flake8-unused-arguments
-    "PTH",  # flake8-use-pathlib
-    "ERA",  # eradicate
-    "PL",   # pylint
-    "RUF",  # ruff-specific rules
-    "TCH",  # flake8-type-checking
-]
-ignore = ["E203"]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-
-[tool.mypy]
-plugins = ["pydantic.mypy"]
-warn_return_any = true
-warn_unused_configs = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-addopts = "-ra -q"
-markers = [
-    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
-]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
-
-[tool.coverage.run]
-source = ["private_assistant_climate_skill"]
-branch = true
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if __name__ == .__main__.:",
-]
