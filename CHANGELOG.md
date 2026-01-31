@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.5...v1.3.0) (2026-01-31)
+
+
+### Features
+
+* restructure help intent ([09928b9](https://github.com/stkr22/private-assistant-climate-skill-py/commit/09928b94ff9d644e2e9f046da632cd69088fa1ee))
+* restructure help intent ([af5311d](https://github.com/stkr22/private-assistant-climate-skill-py/commit/af5311dfdc2c3e92921bdfe5e3cd191e20b541c3))
+
 ## [1.2.5](https://github.com/stkr22/private-assistant-climate-skill-py/compare/v1.2.4...v1.2.5) (2026-01-02)
 
 
