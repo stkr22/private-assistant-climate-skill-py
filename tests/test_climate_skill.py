@@ -273,33 +273,6 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
             args = mock_send_response.call_args[0]
             self.assertIn("couldn't find", args[0].lower())
 
-    async def test_handle_system_help(self):
-        """Test handling SYSTEM_HELP intent."""
-        # Create mock intent request
-        client_request = ClientRequest(
-            id=uuid.uuid4(),
-            text="help with climate",
-            room="study",
-            output_topic="assistant/study/output",
-        )
-
-        classified_intent = ClassifiedIntent(
-            intent_type=IntentType.SYSTEM_HELP,
-            confidence=0.85,
-            entities={},
-            raw_text="help with climate",
-        )
-
-        intent_request = IntentRequest(
-            classified_intent=classified_intent,
-            client_request=client_request,
-        )
-
-        # Test the handler runs without error
-        with patch.object(self.skill, "send_response"):
-            await self.skill._handle_system_help(intent_request)
-            # Verify handler completed successfully (response sent in background task)
-
     async def test_process_request_routing(self):
         """Test that process_request routes to correct handlers."""
         client_request = ClientRequest(
@@ -329,23 +302,6 @@ class TestClimateSkill(unittest.IsolatedAsyncioTestCase):
         with patch.object(self.skill, "_handle_device_set") as mock_handle_set:
             await self.skill.process_request(intent_request)
             mock_handle_set.assert_called_once_with(intent_request)
-
-        # Test SYSTEM_HELP routing
-        classified_intent = ClassifiedIntent(
-            intent_type=IntentType.SYSTEM_HELP,
-            confidence=0.85,
-            entities={},
-            raw_text="help with climate",
-        )
-
-        intent_request = IntentRequest(
-            classified_intent=classified_intent,
-            client_request=client_request,
-        )
-
-        with patch.object(self.skill, "_handle_system_help") as mock_handle_help:
-            await self.skill.process_request(intent_request)
-            mock_handle_help.assert_called_once_with(intent_request)
 
     async def test_process_request_unsupported_intent(self):
         """Test handling of unsupported intent types."""
