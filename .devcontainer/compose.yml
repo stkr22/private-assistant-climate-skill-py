@@ -32,7 +32,7 @@ services:
 
   # PostgreSQL database for device registry
   postgres:
-    image: docker.io/postgres:18.1-trixie
+    image: docker.io/postgres:18.1-trixie@sha256:5773fe724c49c42a7a9ca70202e11e1dff21fb7235b335a73f39297d200b73a2
     container_name: climate-skill-postgres
     environment:
       POSTGRES_USER: assistant
@@ -48,7 +48,7 @@ services:
 
   # Eclipse Mosquitto MQTT broker
   mosquitto:
-    image: docker.io/eclipse-mosquitto:2.0.22
+    image: docker.io/eclipse-mosquitto:2.0.22@sha256:e011726bdfa757011bc8b8716e03b7c35d2c3f623d9f658c2c6bf66e909ea42e
     container_name: climate-skill-mosquitto
     volumes:
       - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
